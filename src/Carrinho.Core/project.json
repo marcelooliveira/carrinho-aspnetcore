@@ -1,0 +1,22 @@
+{
+  "version": "1.0.0-*",
+
+  "dependencies": {
+    "Microsoft.EntityFrameworkCore": "1.1.0",
+    "Microsoft.EntityFrameworkCore.SqlServer": "1.1.0",
+    "Microsoft.EntityFrameworkCore.Tools": "1.1.0-preview4-final",
+    "Microsoft.Extensions.DependencyInjection": "1.1.0",
+    "Microsoft.IdentityModel.Protocols": "2.0.0",
+    "NETStandard.Library": "1.6.0",
+    "React.AspNet": "3.0.0",
+    "React.Core": "3.0.0",
+    "System.Data.SqlClient": "4.1.0",
+    "System.Diagnostics.TraceSource": "4.0.0"
+  },
+
+  "frameworks": {
+    "netstandard1.6": {
+      "imports": "dnxcore50"
+    }
+  }
+}

@@ -1,0 +1,22 @@
+﻿@*@using System.Web.Optimization*@
+@using System.Collections.Generic
+@model Carrinho.Core.DTOs.CheckoutSummaryDTO
+@{
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+@{
+    ViewBag.Title = "Carrinho";
+}
+
+@Html.React("CheckoutSuccessView", new
+{
+    title = "React JS.Net + React-Bootstrap",
+    model = Model
+})
+
+<environment names="Development,Staging,Production">
+    @*<script src="~/build/bundle.js"></script>*@
+</environment>
+
+@Html.ReactInitJavaScript()
