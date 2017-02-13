@@ -84,6 +84,10 @@ namespace Carrinho
                 .AddScript("~/js/Components.jsx")
                 .AddScript("~/js/Cart.jsx")
                 .AddScript("~/js/CheckoutSuccess.jsx");
+
+                //config
+                //.SetBabelConfig(new React.BabelConfig())
+                //.AddScriptWithoutTransform("~/build/bundle.js");
             });
 
             app.UseStaticFiles();
