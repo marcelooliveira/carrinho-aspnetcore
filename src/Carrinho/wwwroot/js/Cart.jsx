@@ -107,18 +107,19 @@ class CartView extends React.Component {
         var item;
         for (var i = 0; i < (this.props.model.cartItems || []).length; i++) {
             item = this.props.model.cartItems[i];
-            items.push(item);
+            //items.push(item);
 
-            //items.push({
-            //    SKU: item.sKU,
-            //    SmallImagePath: item.smallImagePath,
-            //    LargeImagePath: item.largeImagePath,
-            //    Description: item.description,
-            //    SoldAndDeliveredBy: item.soldAndDeliveredBy,
-            //    Price: item.price,
-            //    Quantity: item.quantity,
-            //    Subtotal: item.subtotal
-            //});
+            items.push({
+                id: item.id,
+                sku: item.sku,
+                smallImagePath: item.smallImagePath,
+                largeImagePath: item.largeImagePath,
+                description: item.description,
+                soldAndDeliveredBy: item.soldAndDeliveredBy,
+                price: item.price,
+                quantity: item.quantity,
+                subtotal: item.subtotal
+            });
         }
 
         this.state = {
@@ -165,11 +166,11 @@ class CartView extends React.Component {
                             <Column md={5} className="my-children-have-dividers">
                                 <Row className="vertical-align">
                                     <Column md={8} className="justify-right">
-                                        Subtotal ({this.state.items.length}&nbsp;<Pluralize value={this.state.items.length} singular="item" plural="items" />):
+                                        Subtotal ({this.state.items.length}<Pluralize value={this.state.items.length} singular="item" plural="items" />):
                                     </Column>
                                     <Column md={4} className="green justify-right">
                                         <span>
-                                            <Dollars val={this.state.subtotal} />
+                                            <Dollars val={this.state.Subtotal} />
                                         </span>
                                     </Column>
                                 </Row>
@@ -206,7 +207,7 @@ class CartView extends React.Component {
                         this.state.items.length == 0 ? null :
                         <div>
                         {/* TITLE */}
-                        <h3>Your shopping cart ({ this.state.items.length} <Pluralize value={this.state.items.length} singular="item" plural="items" />)</h3>
+                        <h3>Your shopping cart ({ this.state.items.length}<Pluralize value={this.state.items.length} singular="item" plural="items" />)</h3>
                         {/* NAVIGATION BUTTONS */}
                         <Row>
                             <Column md={3}>

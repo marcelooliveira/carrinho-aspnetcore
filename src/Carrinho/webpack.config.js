@@ -4,9 +4,15 @@ module.exports = {
     entry: 
     {
         javascript: [
+            //'./wwwroot/lib/react/react-dom.js',
+            //'./wwwroot/lib/react/react-with-addons.js',
+            //'./wwwroot/js/react-bootstrap.js',
             './wwwroot/js/Cart.jsx',
             './wwwroot/js/CheckoutSuccess.jsx',
             './wwwroot/js/Components.jsx'
+            //'./wwwroot/lib/react/react-dom.js',
+            //'./wwwroot/lib/react/react.js'
+            //'./wwwroot/lib/react/react-with-addons.js'
         ]
     },
     output: {
