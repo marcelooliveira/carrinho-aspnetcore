@@ -67,60 +67,45 @@ namespace Carrinho.Core
 
         public void SaveCart(CartItemDTO newOrEditItem)
         {
-            //try
-            //{
-                if (newOrEditItem.Quantity < 0)
-                    newOrEditItem.Quantity = 0;
+            if (newOrEditItem.Quantity < 0)
+                newOrEditItem.Quantity = 0;
 
-                using (var db = new Context(this._dbOptions))
+            using (var db = new Context(this._dbOptions))
+            {
+                using (var transaction = db.Database.BeginTransaction())
                 {
-                    using (var transaction = db.Database.BeginTransaction())
+                    var product = db.Product.Where(p => p.SKU == newOrEditItem.SKU).Single();
+
+                    var cartItem =
+                        (from ci in db.CartItem
+                         join p in db.Product on ci.ProductId equals p.Id
+                         where p.SKU == newOrEditItem.SKU
+                         select ci)
+                        .SingleOrDefault();
+
+                    if (cartItem != null)
                     {
-                        var product = db.Product.Where(p => p.SKU == newOrEditItem.SKU).Single();
-
-                        var cartItem =
-                            (from ci in db.CartItem
-                             join p in db.Product on ci.ProductId equals p.Id
-                             where p.SKU == newOrEditItem.SKU
-                             select ci)
-                            .SingleOrDefault();
-
-                        if (cartItem != null)
-                        {
-                            if (newOrEditItem.Quantity == 0)
-                                db.CartItem.Remove(cartItem);
-                            else
-                            {
-                                cartItem.Quantity = newOrEditItem.Quantity;
-                                cartItem.Product = product;
-                            }
-                        }
+                        if (newOrEditItem.Quantity == 0)
+                            db.CartItem.Remove(cartItem);
                         else
                         {
-                            db.CartItem.Add(new CartItem
-                            {
-                                Product = product,
-                                Quantity = newOrEditItem.Quantity
-                            });
+                            cartItem.Quantity = newOrEditItem.Quantity;
+                            cartItem.Product = product;
                         }
-
-                        db.SaveChanges();
-                        transaction.Commit();
                     }
+                    else
+                    {
+                        db.CartItem.Add(new CartItem
+                        {
+                            Product = product,
+                            Quantity = newOrEditItem.Quantity
+                        });
+                    }
+
+                    db.SaveChanges();
+                    transaction.Commit();
                 }
-            //}
-            //catch (DbEntityValidationException dbEx)
-            //{
-            //    foreach (var validationErrors in dbEx.EntityValidationErrors)
-            //    {
-            //        foreach (var validationError in validationErrors.ValidationErrors)
-            //        {
-            //            Trace.TraceInformation("Property: {0} Error: {1}",
-            //                                    validationError.PropertyName,
-            //                                    validationError.ErrorMessage);
-            //        }
-            //    }
-            //}
+            }
         }
 
         public List<ProductDTO> GetProducts()
@@ -176,47 +161,49 @@ namespace Carrinho.Core
         {
             var db = new Context(this._dbOptions);
 
-            db.Database.EnsureCreated();
+            bool bancoNovo = db.Database.EnsureCreated();
 
-            var products = new string[]
+            if (bancoNovo)
             {
-                "10 Million Member CodeProject T-Shirt|3399",
-                "Women's T-Shirt|3399",
-                "CodeProject.com Body Suit|1399",
-                "CodeProject Mug Mugs|1099",
-                "RootAdmin Mug|1099",
-                "Drinking Glass|1099",
-                "Stein|1399",
-                "Mousepad|1099",
-                "Square Sticker|299",
-            };
-
-            var index = 1;
-            foreach (var p in products)
-            {
-                var description = p.Split('|')[0];
-                var price = decimal.Parse(p.Split('|')[1]) / 100M;
-
-                var product =
-                db.Product.Add(new Product
+                var products = new string[]
                 {
-                    SKU = Guid.NewGuid().ToString(),
-                    SmallImagePath = string.Format("~/images/products/small_{0}.jpg", index),
-                    LargeImagePath = string.Format("~/images/products/large_{0}.jpg", index),
-                    Description = description,
-                    Price = price
-                }).Entity;
-                
-                var cartItem =
-                db.CartItem.Add(new CartItem
-                {
-                    Product = product,
-                    Quantity = 1
-                }).Entity;
+                    "10 Million Member CodeProject T-Shirt|3399",
+                    "Women's T-Shirt|3399",
+                    "CodeProject.com Body Suit|1399",
+                    "CodeProject Mug Mugs|1099",
+                    "RootAdmin Mug|1099",
+                    "Drinking Glass|1099",
+                    "Stein|1399",
+                    "Mousepad|1099",
+                    "Square Sticker|299",
+                };
 
-                index++;
+                var index = 1;
+                foreach (var p in products)
+                {
+                    var description = p.Split('|')[0];
+                    var price = decimal.Parse(p.Split('|')[1]) / 100M;
+
+                    var product =
+                    db.Product.Add(new Product
+                    {
+                        SKU = Guid.NewGuid().ToString(),
+                        SmallImagePath = string.Format("images/products/small_{0}.jpg", index),
+                        LargeImagePath = string.Format("images/products/large_{0}.jpg", index),
+                        Description = description,
+                        Price = price
+                    }).Entity;
+
+                    var cartItem =
+                    db.CartItem.Add(new CartItem
+                    {
+                        Product = product,
+                        Quantity = 1
+                    }).Entity;
+
+                    index++;
+                }
             }
-
             db.SaveChanges();
 
             return db;

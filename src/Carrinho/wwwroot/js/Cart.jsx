@@ -2,7 +2,7 @@
     getInitialState: function () {
         var item = this.props.model;
         return {
-            SKU: item.sKU,
+            SKU: item.sku,
             SmallImagePath: item.smallImagePath,
             LargeImagePath: item.largeImagePath,
             Description: item.description,
@@ -16,10 +16,10 @@
         this.setState(Object.assign({}, this.state, change))
     },
     handleIncrement: function () {
-        this.postQuantity(this.state.quantity + 1);
+        this.postQuantity(this.state.Quantity + 1);
     },
     handleDecrement: function () {
-        this.postQuantity(this.state.quantity - 1);
+        this.postQuantity(this.state.Quantity - 1);
     },
     removeItem: function () {
         this.postQuantity(0);
@@ -27,22 +27,25 @@
     postQuantity: function (quantity, callback) {
         $('.overlay').show();
 
+        var data = {
+            SKU: this.props.model.sku,
+            Quantity: quantity,
+            Price: this.props.model.price
+        }
+
         $.ajax({
+            type: 'POST',
             url: '/api/Cart',
-            type: 'post',
-            data: {
-                SKU: this.props.model.SKU,
-                Quantity: quantity,
-                Price: this.props.model.Price
-            },
-            headers: {
-                'RequestVerificationToken': this.props.TokenHeaderValue
-            },
-            dataType: 'json'
+            dataType: 'json',
+            contentType: 'application/json; charset=utf-8',
+            data: JSON.stringify(data)
+            //headers: {
+            //    'RequestVerificationToken': this.props.TokenHeaderValue
+            //},
         }).done(function (data) {
-            for (var item of data.CartItems) {
-                if (item.SKU == this.props.model.SKU) {
-                    this.updateState({ Quantity: item.Quantity, Subtotal: item.Subtotal });
+            for (var item of data.cartItems) {
+                if (item.sku == this.props.model.sku) {
+                    this.updateState({ Quantity: item.quantity, Subtotal: item.subtotal });
                     this.props.handleCartChange(data, item);
                     return;
                 }
@@ -107,7 +110,6 @@ class CartView extends React.Component {
         var item;
         for (var i = 0; i < (this.props.model.cartItems || []).length; i++) {
             item = this.props.model.cartItems[i];
-            //items.push(item);
 
             items.push({
                 id: item.id,
@@ -123,27 +125,25 @@ class CartView extends React.Component {
         }
 
         this.state = {
-            canFinishOrder: true,
-            items: items,
-            Subtotal: this.props.model.Subtotal,
-            DiscountRate: this.props.model.DiscountRate,
-            DiscountValue: this.props.model.DiscountValue,
-            Total: this.props.model.Total
+            CanFinishOrder: true,
+            Items: items,
+            Subtotal: this.props.model.subtotal,
+            DiscountRate: this.props.model.discountRate,
+            DiscountValue: this.props.model.discountValue,
+            Total: this.props.model.total
         };
     }
 
     handleCartChange(cart, cartItem) {
-        var newState = Object.assign({}, this.state, {
-            Subtotal: cart.Subtotal,
-            DiscountRate: cart.DiscountRate,
-            DiscountValue: cart.DiscountValue,
-            Total: cart.Total
-        });
-        if (cartItem.Quantity == 0) {
-            newState.items.splice(newState.items.findIndex(i =>
-                i.SKU == cartItem.SKU), 1);
+        var change = {
+            Items: cart.cartItems,
+            Subtotal: cart.subtotal,
+            DiscountRate: cart.discountRate,
+            DiscountValue: cart.discountValue,
+            Total: cart.total
         }
-        this.setState(newState);
+
+        this.setState(Object.assign({}, this.state, change));
     }
 
     render() {
@@ -154,11 +154,13 @@ class CartView extends React.Component {
                                     <Column md={2} className="justify-right">subtotal</Column>
         </Row>);
 
-        const body = (this.state.items.map(item => {
-            return <CartItem key={item.SKU} model={item}
-                             handleCartChange={this.handleCartChange.bind(this)}
-                             TokenHeaderValue={this.props.TokenHeaderValue} />;
-        }
+        const body = (this.state.Items
+            .filter(item => item.quantity > 0)
+            .map(item => {
+                return <CartItem key={item.sku} model={item}
+                            handleCartChange={this.handleCartChange.bind(this)}
+                            TokenHeaderValue={this.props.TokenHeaderValue} />;
+            }
         ));
 
         const footer = (<Row>
@@ -166,7 +168,7 @@ class CartView extends React.Component {
                             <Column md={5} className="my-children-have-dividers">
                                 <Row className="vertical-align">
                                     <Column md={8} className="justify-right">
-                                        Subtotal ({this.state.items.length}<Pluralize value={this.state.items.length} singular="item" plural="items" />):
+                                        Subtotal ({this.state.Items.length}<Pluralize value={this.state.Items.length} singular="item" plural="items" />):
                                     </Column>
                                     <Column md={4} className="green justify-right">
                                         <span>
@@ -174,15 +176,15 @@ class CartView extends React.Component {
                                         </span>
                                     </Column>
                                 </Row>
-                                { this.state.discountRate
+                                { this.state.DiscountRate
                                 ?
                                     <Row className="vertical-align">
                                         <Column md={8} className="justify-right">
-                                            Discount (<span>{this.state.discountRate}</span>%):
+                                            Discount (<span>{this.state.DiscountRate}</span>%):
                                         </Column>
                                     <Column md={4} className="green justify-right">
                                         <span>
-                                            <Dollars val={this.state.discountValue} />
+                                            <Dollars val={this.state.DiscountValue} />
                                         </span>
                                     </Column>
                                     </Row>
@@ -193,21 +195,21 @@ class CartView extends React.Component {
                                     <h3>
                                         Total:&nbsp;
                                         <span className="green">
-                                            <Dollars val={this.state.total} />
+                                            <Dollars val={this.state.Total} />
                                         </span>
                                     </h3>
                                     </Column>
                                 </Row>
                             </Column>
-        </Row>);
+                    </Row>);
 
         return (
                 <div className="cart">
                     {
-                        this.state.items.length == 0 ? null :
+                        this.state.Items.length == 0 ? null :
                         <div>
                         {/* TITLE */}
-                        <h3>Your shopping cart ({ this.state.items.length}<Pluralize value={this.state.items.length} singular="item" plural="items" />)</h3>
+                        <h3>Your shopping cart ({ this.state.Items.length}<Pluralize value={this.state.Items.length} singular="item" plural="items" />)</h3>
                         {/* NAVIGATION BUTTONS */}
                         <Row>
                             <Column md={3}>
@@ -246,7 +248,7 @@ class CartView extends React.Component {
                         </div>
                     }
                     {
-                    this.state.items.length > 0
+                    this.state.Items.length > 0
                     ? null
                     :
                         <div>
@@ -262,7 +264,7 @@ class CartView extends React.Component {
                                 <br />
                                 <div>
                                     {
-                                        this.state.canFinishOrder
+                                        this.state.CanFinishOrder
                                         ?
                                         <a href={this.props.urlNewProduct}>
                                             <button type="button" className="btn btn-success">Enter new product</button>

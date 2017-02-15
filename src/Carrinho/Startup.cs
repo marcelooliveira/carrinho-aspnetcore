@@ -11,6 +11,8 @@ using Carrinho.Core;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Http;
 using React.AspNet;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Serialization;
 
 namespace Carrinho
 {
@@ -44,15 +46,14 @@ namespace Carrinho
             services.AddSingleton<IHttpContextAccessor, HttpContextAccessor>();
             services.AddReact();
             services.AddMvc();
-            //services.Configure<ConnectionStrings>(Configuration.GetSection("ConnectionStrings"));
-            //services.AddDbContext<Context>(options =>
-            //     options.UseSqlServer(Configuration.GetConnectionString("Carrinho")));
             services.AddTransient<ICheckoutManager, CheckoutManager>();
 
             var options = new DbContextOptionsBuilder<Context>();
             options.UseSqlServer(Configuration.GetConnectionString("Carrinho"));
             var dbOptions = options.Options;
             services.AddSingleton<DbContextOptions<Context>>(dbOptions);
+
+            new CheckoutManager(dbOptions).InitializeDB();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -79,15 +80,17 @@ namespace Carrinho
             app.UseReact(config =>
             {
                 config
-                .AddScript("~/js/showdown.js")
+                .AddScript("~/lib/react/react.min.js")
+                .AddScript("~/lib/react/react-dom.min.js")
                 .AddScript("~/js/react-bootstrap.js")
                 .AddScript("~/js/Components.jsx")
                 .AddScript("~/js/Cart.jsx")
-                .AddScript("~/js/CheckoutSuccess.jsx");
-
-                //config
-                //.SetBabelConfig(new React.BabelConfig())
-                //.AddScriptWithoutTransform("~/build/bundle.js");
+                .AddScript("~/js/CheckoutSuccess.jsx")
+                .SetJsonSerializerSettings(new JsonSerializerSettings
+                {
+                    StringEscapeHandling = StringEscapeHandling.EscapeHtml,
+                    ContractResolver = new CamelCasePropertyNamesContractResolver()
+                });
             });
 
             app.UseStaticFiles();
